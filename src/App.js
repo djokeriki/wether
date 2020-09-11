@@ -1,50 +1,32 @@
-import React, {useEffect, useState} from 'react'
-import Recipe from './Recipe';
-import {v1 as uuid} from 'uuid';
+import React, {useState, useEffect} from 'react'
+import axios from 'axios';
 import './App.css'
-
-function App() {
-  const APP_ID = "f1e0674a";
-  const APP_KEY = "b81f460cf3e1ffbdc7c8c628d4d8d6bd";
-
-  const [recipes, setRecipes] = useState([]);
-  const [search, setSearch] = useState('');
-  const [query, setQuery] = useState('chicken');
+import Header from './components/ui/Header'
+import CharacterGrid from './components/characters/CharacterGrid'
+import Search from './components/ui/Search';
 
 
-
+const App = () => {
+  const [items, setItems] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
-    getRecipes();
+    const fetchItems = async () => {
+      const result = await axios(`https://breakingbadapi.com/api/characters?name=${query}`)
+      console.log(result.data);
+      setItems(result.data);
+      setIsLoading(false)
+    }
+    fetchItems()
   }, [query])
-  const getRecipes = async () => {
-      const response = await fetch(`https://api.edamam.com/search?q=${query}&app_id=${APP_ID}&app_key=${APP_KEY}`);
-      const data = await response.json();
-      console.log(data.hits);
-      setRecipes(data.hits);
-  }
 
-  const updateSearch = e => {
-    setSearch(e.target.value)
-  }
-  const getSearch = e => {
-    e.preventDefault();
-    setQuery(search);
-    setSearch('');
-  }
 
   return (
-    <div className="App">
-      <form onSubmit={getSearch} className="search-form">
-        <input className="search-bar" type="text" value={search} onChange={updateSearch} />
-        <button className="search-button" type="submit">Search</button>
-      </form>
-    {recipes.map(recipe => (
-      <Recipe key={uuid()} title={recipe.recipe.label} calories={recipe.recipe.calories}
-      image={recipe.recipe.image}
-      ingredients={recipe.recipe.ingredients}
-      />
-    ))}
+    <div className="container">
+      <Header />
+      <Search getQuery={(q) => setQuery(q)} />
+      <CharacterGrid isLoading={isLoading} items={items} />
     </div>
   )
 }
